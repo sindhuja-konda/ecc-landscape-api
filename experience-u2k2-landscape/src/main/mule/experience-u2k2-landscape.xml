@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+      xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+      xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+        http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+ 
+    <!-- SFTP Config -->
+    <sftp:config name="SFTP_Config" >
+        <sftp:connection workingDir="/" host="localhost" port="22001" username="u2k2user" password="u2k2pass"/>
+    </sftp:config>
+ 
+    <!-- JMS Config -->
+    <jms:config name="JMS_Config" >
+        <jms:active-mq-connection username="admin" password="admin">
+            <jms:factory-configuration brokerUrl="tcp://localhost:61616"/>
+        </jms:active-mq-connection>
+    </jms:config>
+ 
+    <!-- Flow -->
+    <configuration doc:name="Configuration" doc:id="e1e2cd1e-4bd9-4a24-90ad-d44d2227d929" defaultErrorHandler-ref="globalerror-u2k2Error_Handler" />
+	<flow name="SFTP-To-JMS-Flow">
+        <sftp:listener
+            config-ref="SFTP_Config"
+            directory="/veeva/inprogress"
+            watermarkEnabled="true">
+            <scheduling-strategy>
+                <fixed-frequency frequency="10000"/>
+            </scheduling-strategy>
+			<sftp:matcher filenamePattern="*.csv" />
+        
+</sftp:listener>
+ 
+        <!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="929cc78b-68bb-4a16-a824-3854f76f5776" message="File picked: #[attributes.fileName&#93;"/> [STUDIO] -->
+		<logger level="INFO" message="File picked: #[attributes.path]" doc:name="Log_u2k2_File_Picked"/>
+ 
+        <!-- Publish file content and path to JMS -->
+        <jms:publish
+            config-ref="JMS_Config"
+            destination="u2k2.flow" doc:name="JMS_u2k2_Publish queue">
+			<jms:message >
+				<jms:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+    filePath: attributes.path,
+    fileName: attributes.fileName,
+    system: "u2k2",
+    content: payload
+}]]]></jms:body>
+			</jms:message>
+		</jms:publish>
+		<logger level="INFO" doc:name="Log_u2k2_JMS_Publish_Success" doc:id="86025b03-d5d5-4d22-915d-1f6a6ad1ec3e" message='#["This file is successfully processed" ++ ":" ++ attributes.fileName]'/>
+		<error-handler ref="globalerror-u2k2Error_Handler" />
+		
+		
+    
+</flow>
+</mule>

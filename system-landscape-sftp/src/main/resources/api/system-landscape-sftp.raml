@@ -1,0 +1,45 @@
+#%RAML 1.0
+title: system-landscape-sftp
+version: v1
+baseUri: /system-layer
+ 
+/{system}:
+  description: Dynamic endpoint for system-specific CSV file processing
+  uriParameters:
+    system:
+      type: string
+      enum: [u2k2, cordillera, sirius, fusion]
+      description: Target system name
+      example: cordillera
+  post:
+    description: Process CSV file. Metadata (fileName, filePath) sent via JMS properties or headers.
+    body:
+      text/csv:
+        description: CSV file content
+        example: |
+          id,name,value,status
+          1,Material A,1000,ACTIVE
+          2,Material B,500,INACTIVE
+      application/csv:
+        description: Alternative CSV content type
+        example: |
+          id,name,value,status
+          1,Material A,1000,ACTIVE
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "success",
+                "message": "File processed successfully"
+              }
+      400:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "error",
+                "message": "Invalid request"
+              }
+ 

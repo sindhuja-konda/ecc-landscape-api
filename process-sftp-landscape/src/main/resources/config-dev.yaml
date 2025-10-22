@@ -1,0 +1,14 @@
+#smtp config
+smtp:
+  host: "smtp.gmail.com"
+  port: "587"
+  protocol: "smtp"
+  username: "sindhujakonda22@gmail.com"
+  password: "kmjseayulwqvluqy"    
+
+#JMS Config
+jms:
+  jms.brokerUrl: "tcp://localhost:61616"
+  jms.username:  "admin"
+  jms.password:  "admin"
+  

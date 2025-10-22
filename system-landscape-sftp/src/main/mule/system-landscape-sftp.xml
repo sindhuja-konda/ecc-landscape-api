@@ -1,0 +1,147 @@
+#%RAML 1.0
+title: System Layer API
+version: v1
+baseUri: /system-layer
+ 
+/{system}:
+  description: Dynamic endpoint for system-specific CSV file processing
+  uriParameters:
+    system:
+      type: string
+      enum: [u2k2, cordillera, sirius, fusion]
+      description: Target system name
+      example: cordillera
+  post:
+    description: Process CSV file. Metadata (fileName, filePath) sent via JMS properties or headers.
+    body:
+      text/csv:
+        description: CSV file content
+        example: |
+          id,name,value,status
+          1,Material A,1000,ACTIVE
+          2,Material B,500,INACTIVE
+      application/csv:
+        description: Alternative CSV content type
+        example: |
+          id,name,value,status
+          1,Material A,1000,ACTIVE
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "success",
+                "message": "File processed successfully"
+              }
+      400:
+        body:
+          application/json:
+            example: |
+              {
+                "status": "error",
+                "message": "Invalid request"
+              }
+ 
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+    <http:listener-config name="sftp-system-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="sftp-system-config" api="sftp-system.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="478a887f-bae8-48c6-afaf-7377bdc89400" >
+		<sftp:connection workingDir="/" host="localhost" port="#[vars.port]" username="#[vars.user]" password="pass" />
+	</sftp:config>
+	<flow name="sftp-system-main">
+        <http:listener config-ref="sftp-system-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sftp-system-config" />
+		<error-handler ref="globalErrorHandlerError_Handler" />
+    </flow>
+    <flow name="post:\(system):application\json:sftp-system-config">
+		<ee:transform doc:name="Transform Message" doc:id="71eb5df2-f3a0-4804-88fb-cbf0c48455a1" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="fileName" ><![CDATA[payload.fileName]]></ee:set-variable>
+				<ee:set-variable variableName="system" ><![CDATA[payload.system]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="json to csv" doc:id="72e3ec77-d8d4-47df-8cac-04420c6d7add" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload.content]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="ee9750e2-3fa3-4952-a11a-8367ac3c3c8f" >
+			<when expression='#[vars.system == "u2k2"]' >
+				<ee:transform doc:name="u2k2SftpConfigurations" doc:id="004e2943-f069-4db6-9842-5799300c9e7e" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="port" ><![CDATA[22001]]></ee:set-variable>
+						<ee:set-variable variableName="user" ><![CDATA["u2k2user"]]></ee:set-variable>
+						<ee:set-variable variableName="password" ><![CDATA["u2k2pass"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.system == "cordillera"]' >
+				<ee:transform doc:name="cordilleraSftpConfigurations" doc:id="8b134455-742c-477d-bd77-c0762b47b6fa" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="port" ><![CDATA[22002]]></ee:set-variable>
+						<ee:set-variable variableName="user" ><![CDATA["cordillerauser"]]></ee:set-variable>
+						<ee:set-variable variableName="password" ><![CDATA["cordillerapass"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.system == "sirius"]' >
+				<ee:transform doc:name="siriusSftpConfigurations" doc:id="5a6444c6-b7ef-4908-bdbf-523b4f02ca5f" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="port" ><![CDATA[22003]]></ee:set-variable>
+						<ee:set-variable variableName="user" ><![CDATA["siriususer"]]></ee:set-variable>
+						<ee:set-variable variableName="password" ><![CDATA["siriuspass"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.system == "fusion"]' >
+				<ee:transform doc:name="fusionSftpConfigurations" doc:id="1905527d-c3c7-4373-8113-61cb389be0df" >
+					<ee:message />
+					<ee:variables >
+						<ee:set-variable variableName="port" ><![CDATA[22004]]></ee:set-variable>
+						<ee:set-variable variableName="user" ><![CDATA["fusionuser"]]></ee:set-variable>
+						<ee:set-variable variableName="password" ><![CDATA["fusionpass"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="b59e8956-d9e2-4ea8-a759-83d02ce1552b" message="Invalid system name" />
+			</otherwise>
+		</choice>
+		<sftp:write doc:id="3ffc265c-6ac4-4575-8961-9ee14a5ceb42" config-ref="SFTP_Config" path="#['/veeva/processed/' ++ vars.fileName]" doc:name="writeToProcessedFolder" />
+		<ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "success",
+  message: "File uploaded successfully"
+} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<set-payload value="#[{ 'status': 'success', 'filePath': vars.destPath }]" doc:name="Set Payload" doc:id="b1847c38-4f56-4ca2-b6df-f72ebb3a654d" />
+		<error-handler ref="globalErrorHandlerError_Handler" />
+    </flow>
+</mule>
+ 
+ 

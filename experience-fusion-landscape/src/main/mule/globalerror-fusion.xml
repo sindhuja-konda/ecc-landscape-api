@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="globalerror-fusionError_Handler" doc:id="bc70c2c1-f552-468a-97cf-beeb4e36721e" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate5" doc:id="615742c3-6ea9-4e7c-a78e-088296f1b7a5" type="JMS:CONNECTIVITY" >
+			<ee:transform doc:name="Transform Message" doc:id="95b04742-5993-41be-aca5-d43dec3a6c3d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate6" doc:id="d55a9194-bd1a-44b8-bd07-b9cf6d05c924" type="JMS:ILLEGAL_BODY" >
+			<ee:transform doc:name="Transform Message" doc:id="2013e025-b4f8-4774-9529-0afee5932153" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1fb9799d-43eb-4362-99e0-c167cd402826" type="JMS:DESTINATION_NOT_FOUND">
+			<ee:transform doc:name="Transform Message" doc:id="4901a780-61f6-4057-bf35-da16b8210eb2" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fb6c11e1-33f7-4d17-a462-fd5783b8b85d" type="JMS:PUBLISHING">
+			<ee:transform doc:name="Transform Message" doc:id="a0225da6-793f-4b86-b109-c93a473179e2" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="48e5ca57-a86b-4d09-a62e-27641c7961e5" type="JMS:RETRY_EXHAUSTED">
+			<ee:transform doc:name="Transform Message" doc:id="1b117a32-6ab3-408d-bb98-2de293e6cd42" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9e572446-f1be-4ffe-8717-48a039202504" type="JMS:SECURITY">
+			<ee:transform doc:name="Transform Message" doc:id="5cf419bc-e58f-453a-b4f6-92b8a322797f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "code" : error.errorType.identifier default "400",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "correlationId" : vars.correlationId default "",
+  "timestamp": now() as DateTime
+}]]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+      xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+        http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+ 
+    <!-- SFTP Config -->
+    <sftp:config name="SFTP_Config" >
+        <sftp:connection workingDir="/" host="localhost" port="22002" username="cordillerauser" password="cordillerapass"/>
+    </sftp:config>
+ 
+    <!-- JMS Config -->
+    <jms:config name="JMS_Config" >
+        <jms:active-mq-connection username="admin" password="admin">
+            <jms:factory-configuration brokerUrl="tcp://localhost:61616"/>
+        </jms:active-mq-connection>
+    </jms:config>
+ 
+    <!-- Flow -->
+    <configuration doc:name="Configuration" doc:id="88d686f1-702b-44ed-ac7d-55508c3f268b" defaultErrorHandler-ref="globalerror-cordilleraError_Handler" />
+	<flow name="SFTP-To-JMS-Flow">
+        <sftp:listener
+            config-ref="SFTP_Config"
+            directory="/veeva/inprogress"
+            watermarkEnabled="true" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency frequency="10000"/>
+            </scheduling-strategy>
+			<sftp:matcher filenamePattern="*.csv" />
+        
+</sftp:listener>
+ 
+        <!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="ae4c055f-8b70-4c1d-9fc8-49935f7180ba" message="File picked: #[attributes.fileName&#93;"/> [STUDIO] -->
+		<logger level="INFO" message="File picked: #[attributes.path]" doc:name="Log_cordillera_File_Picked"/>
+ 
+        <!-- Publish file content and path to JMS -->
+        <jms:publish
+            config-ref="JMS_Config"
+            destination="cordillera.flow" doc:name="JMS_cordillera_Publish queue">
+			<jms:message >
+				<jms:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+    filePath: attributes.path,
+    fileName: attributes.fileName,
+    content: payload
+}]]]></jms:body>
+			</jms:message>
+		</jms:publish>
+		<logger level="INFO" doc:name="Log_cordillera_JMS_Publish_Success" doc:id="9eef5afd-3add-44a6-80e5-731aa8537d83" message='#["This file is successfully processed" ++ ":" ++ attributes.fileName]'/>
+		<error-handler ref="globalerror-cordilleraError_Handler" />
+		
+</flow>
+</mule>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+      xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+        http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+ 
+    <!-- SFTP Config -->
+    <sftp:config name="SFTP_Config" >
+        <sftp:connection workingDir="/" host="localhost" port="22003" username="siriususer" password="siriuspass"/>
+    </sftp:config>
+ 
+    <!-- JMS Config -->
+    <jms:config name="JMS_Config" >
+        <jms:active-mq-connection username="admin" password="admin">
+            <jms:factory-configuration brokerUrl="tcp://localhost:61616"/>
+        </jms:active-mq-connection>
+    </jms:config>
+ 
+    <!-- Flow -->
+    <configuration doc:name="Configuration" doc:id="b900862b-db4a-4697-ab8a-694f90a4bea5" defaultErrorHandler-ref="globalerror-siriusError_Handler" />
+	<flow name="SFTP-To-JMS-Flow">
+        <sftp:listener
+            config-ref="SFTP_Config"
+            directory="/veeva/inprogress"
+            watermarkEnabled="true" autoDelete="true">
+            <scheduling-strategy>
+                <fixed-frequency frequency="10000"/>
+            </scheduling-strategy>
+			<sftp:matcher filenamePattern="*.csv" />
+        
+</sftp:listener>
+ 
+        <!-- [STUDIO:"Logger"]<logger level="INFO" doc:name="Logger" doc:id="b1d568e6-195c-4b00-8055-463a93b2c4a4" message="File picked: #[attributes.fileName&#93;"/> [STUDIO] -->
+		<logger level="INFO" message="File picked: #[attributes.path]" doc:name="Log_sirius_File_Picked"/>
+ 
+        <!-- Publish file content and path to JMS -->
+        <jms:publish
+            config-ref="JMS_Config"
+            destination="sirius.flow" doc:name="JMS_sirius_Publish queue">
+			<jms:message >
+				<jms:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+    filePath: attributes.path,
+    fileName: attributes.fileName,
+    content: payload
+}]]]></jms:body>
+			</jms:message>
+		</jms:publish>
+		<logger level="INFO" doc:name="Log_sirius_JMS_Publish_Success" doc:id="c5af45ee-5d76-4198-8918-aa8b8f7d72ef" message='#["This file is successfully processed" ++ ":" ++ attributes.fileName]'/>
+		<error-handler ref="globalerror-siriusError_Handler" />
+		
+</flow>
+</mule>

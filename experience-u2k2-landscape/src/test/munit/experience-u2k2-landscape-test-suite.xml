@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="experience-u2k2-landscape-test-suite.xml" />
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest" doc:id="8b203d6c-281e-45e0-9164-a32d490afb29" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="d235dfdd-a74d-4f74-bfd7-103ec6876e0d" processor="sftp:listener">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="SFTP_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="/veeva/inprogress" attributeName="directory" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="bf8b0e5e-3c9b-47e6-8bcf-1d27d91eb987" name="SFTP-To-JMS-Flow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="cb6ce25c-3cff-4eaf-8748-6b73f3d45e65" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest1" doc:id="edf28c92-6b70-4934-8198-63fcb3b50aea" description="Test" expectedErrorType="JMS:CONNECTIVITY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="a2402986-1ba6-40ee-861f-c4bb3a4a7550" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="f9e2b2e1-9ed9-4c82-9b22-7139539b13df" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="5b160d2e-f74c-4a05-87e1-f33702519dff" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest2" doc:id="7fe82326-7372-496e-b2ea-749c8bb84327" description="Test" expectedErrorType="JMS:DESTINATION_NOT_FOUND" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="e6c4b56e-28ee-4e73-89e1-6c314365f513" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:DESTINATION_NOT_FOUND" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="4a7ed96a-99cc-4470-a0a6-406895d9ba07" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="8ad57c47-3527-4feb-89a0-1ee1abe993fb" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest3" doc:id="ead50512-8ff4-4e1e-8d2a-dcdbe5f4a0cb" description="Test" expectedErrorType="JMS:ILLEGAL_BODY" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="c62c1bd3-f8fc-4865-946f-aa5261cf3e3a" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:ILLEGAL_BODY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="d2d5bcd3-2fce-405e-9cb6-f3f903be0232" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="8570a49c-ca54-42fe-875c-87f9e237cb9e" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest4" doc:id="6c823529-0f74-4010-a25c-97b507af75f8" description="Test" expectedErrorType="JMS:PUBLISHING" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="15416c2e-23f1-4827-8887-ee9bc35db836" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:PUBLISHING" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="32783ffb-2b69-4022-898e-f0eb99a6411c" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="8989ab3c-6b48-4826-8392-55170ad92261" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest5" doc:id="e89c0866-635c-4b0f-bea5-8d2e61cb4874" description="Test" expectedErrorType="JMS:RETRY_EXHAUSTED" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="8bd0a496-18fc-4d41-ab50-e0d67a0d81ce" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:RETRY_EXHAUSTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="62fa27c9-b441-4151-9f71-82ef7156d998" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="8690f013-bd1c-48e0-bc04-1d50c6f6074c" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="experience-u2k2-landscape-test-suite-SFTP-To-JMS-FlowTest6" doc:id="d2ba81f1-2bff-4f74-841f-61553adc0230" description="Test" expectedErrorType="JMS:SECURITY" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="80f1bb93-05fb-4c37-8e7a-330cd7c639f7" processor="jms:publish" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="JMS_Config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="u2k2.flow" attributeName="destination" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="JMS:SECURITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to SFTP-To-JMS-Flow" doc:id="fb4d9b95-86b7-44db-9f13-93bb6f7ff48f" name="SFTP-To-JMS-Flow" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="938fabaa-0c07-40e3-b8e2-8f55153117da" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
